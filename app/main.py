@@ -31,7 +31,9 @@ app.include_router(categories.router)
 app.include_router(movies.router)
 app.include_router(streaming.router)
 
+from fastapi.responses import RedirectResponse
+
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Movie Streaming API"}
+    return RedirectResponse(url="/static/index.html")
 
