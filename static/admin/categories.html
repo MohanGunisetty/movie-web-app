@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories - StreamFlix Admin</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <a href="../index.html" class="nav-brand">StreamFlix Admin</a>
+            <div id="nav-links"></div>
+        </nav>
+
+        <div class="glass fade-in" style="padding: 30px; max-width: 800px; margin: 0 auto;">
+            <h2 style="margin-bottom: 20px;">Manage Categories</h2>
+
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <input type="text" id="new-cat-name" placeholder="New Category Name" style="flex: 1;">
+                <button onclick="addCategory()" class="btn">Add</button>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; color: var(--text-main); margin-top: 20px;">
+                <thead>
+                    <tr style="text-align: left; border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 10px;">ID</th>
+                        <th style="padding: 10px;">Name</th>
+                        <th style="padding: 10px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="cat-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        if (api.getUserRole() !== 'ADMIN') window.location.href = '../login.html';
+
+        async function loadCategories() {
+            const tbody = document.getElementById('cat-table');
+            try {
+                const res = await api.fetch('/categories');
+                const categories = await res.json();
+
+                tbody.innerHTML = categories.map(cat => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px;">${cat.id}</td>
+                        <td style="padding: 10px;">${cat.name}</td>
+                        <td style="padding: 10px;">
+                            <button onclick="deleteCategory(${cat.id})" class="btn" style="background: #ff4444; padding: 5px 10px; font-size: 0.8rem;">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function addCategory() {
+            const nameInput = document.getElementById('new-cat-name');
+            const name = nameInput.value.trim();
+            if (!name) return;
+
+            try {
+                const res = await api.fetch('/admin/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                if (res.ok) {
+                    nameInput.value = '';
+                    loadCategories();
+                } else {
+                    alert('Failed to add category');
+                }
+            } catch (e) {
+                alert('Error adding category');
+            }
+        }
+
+        async function deleteCategory(id) {
+            if (!confirm('Delete this category?')) return;
+            try {
+                const res = await api.fetch(`/admin/categories/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadCategories();
+                } else {
+                    const data = await res.json();
+                    alert(data.detail || 'Failed to delete');
+                }
+            } catch (e) {
+                alert('Error deleting');
+            }
+        }
+
+        loadCategories();
+    </script>
+</body>
+
+</html>

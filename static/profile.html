@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - StreamFlix</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <a href="index.html" class="nav-brand">StreamFlix</a>
+            <div id="nav-links" class="nav-links"></div>
+        </nav>
+
+        <div class="auth-container glass fade-in" style="max-width: 600px;">
+            <h2 style="margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Account
+                Profile</h2>
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" readonly
+                    style="background: rgba(0,0,0,0.3); border-color: transparent;">
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" readonly style="background: rgba(0,0,0,0.3); border-color: transparent;">
+            </div>
+
+            <div class="form-group">
+                <label>Role</label>
+                <div id="role-badge"
+                    style="display: inline-block; padding: 5px 12px; border-radius: 4px; background: var(--primary-color); color: #000; font-weight: bold; font-size: 0.9rem;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Member Since</label>
+                <div id="join-date" style="color: var(--text-main);"></div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: right;">
+                <button onclick="api.logout()" class="btn" style="background: #ff4444; color: white;">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        if (!api.isLoggedIn()) window.location.href = 'login.html';
+
+        async function loadProfile() {
+            try {
+                const res = await api.fetch('/users/me');
+                if (!res.ok) throw new Error();
+                const user = await res.json();
+
+                document.getElementById('username').value = user.username;
+                document.getElementById('email').value = user.email;
+                document.getElementById('role-badge').textContent = user.role;
+                document.getElementById('join-date').textContent = new Date(user.created_at).toLocaleDateString();
+
+            } catch (e) {
+                api.logout();
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+
+</html>

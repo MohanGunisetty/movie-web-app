@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFlix - Watch Movies Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar fade-in">
+            <a href="#" class="nav-brand">StreamFlix</a>
+            <div id="nav-links" class="nav-links">
+                <!-- Populated by JS -->
+            </div>
+        </nav>
+
+        <header class="fade-in" style="margin-bottom: 50px; text-align: center;">
+            <h1 style="font-size: 3rem; margin-bottom: 20px; background: linear-gradient(to right, #fff, #aaa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Unlimited Movies, TV Shows & More.</h1>
+            <p style="color: var(--text-muted); font-size: 1.2rem;">Watch anywhere. Cancel anytime.</p>
+        </header>
+
+        <div class="filters fade-in" id="category-filters">
+            <!-- Categories populated by JS -->
+        </div>
+
+        <div class="movies-grid fade-in" id="movies-container">
+            <!-- Movies populated by JS -->
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Load Categories
+        async function loadCategories() {
+            const container = document.getElementById('category-filters');
+            try {
+                const res = await api.fetch('/categories');
+                const categories = await res.json();
+                
+                let html = `<div class="filter-tag active" onclick="filterMovies(null, this)">All</div>`;
+                categories.forEach(cat => {
+                    html += `<div class="filter-tag" onclick="filterMovies(${cat.id}, this)">${cat.name}</div>`;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                console.error("Failed to load categories");
+            }
+        }
+
+        // Load Movies
+        async function loadMovies(categoryId = null) {
+            const container = document.getElementById('movies-container');
+            container.innerHTML = '<p class="text-muted">Loading...</p>';
+            
+            try {
+                let url = '/movies'; // Public endpoint
+                if (categoryId) url += `?category_id=${categoryId}`;
+                
+                const res = await api.fetch(url);
+                const movies = await res.json();
+                
+                if (movies.length === 0) {
+                    container.innerHTML = '<p class="text-muted">No movies found.</p>';
+                    return;
+                }
+
+                container.innerHTML = movies.map(movie => `
+                    <div class="movie-card" onclick="window.location.href='movie.html?id=${movie.id}'">
+                        <img src="${movie.thumbnail_url || 'https://via.placeholder.com/300x169?text=No+Image'}" class="movie-thumb" alt="${movie.title}">
+                        <div class="movie-info">
+                            <div class="movie-title">${movie.title}</div>
+                            <div class="movie-meta">${movie.category ? movie.category.name : 'Unknown'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                container.innerHTML = '<p class="text-muted">Error loading movies.</p>';
+            }
+        }
+
+        function filterMovies(catId, element) {
+            // Update active state
+            document.querySelectorAll('.filter-tag').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            loadMovies(catId);
+        }
+
+        // Init
+        loadCategories();
+        loadMovies();
+    </script>
+</body>
+</html>

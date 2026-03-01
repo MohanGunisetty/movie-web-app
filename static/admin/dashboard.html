@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - StreamFlix</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+
+        .admin-nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .admin-nav a.active {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <a href="../index.html" class="nav-brand">StreamFlix Admin</a>
+            <div id="nav-links" class="nav-links"></div>
+        </nav>
+
+        <div class="glass fade-in" style="padding: 30px;">
+            <div class="admin-nav">
+                <a href="dashboard.html" class="active">Dashboard</a>
+                <a href="upload.html">Upload Movie</a>
+                <a href="movies.html">Manage Movies</a>
+                <a href="users.html">Manage Users</a>
+                <a href="categories.html">Categories</a>
+            </div>
+
+            <h2 style="margin-bottom: 20px;">Overview</h2>
+
+            <div class="admin-grid">
+                <div class="glass stat-card">
+                    <div>Total Movies</div>
+                    <div class="stat-number" id="total-movies">-</div>
+                </div>
+                <div class="glass stat-card">
+                    <div>Total Users</div>
+                    <div class="stat-number" id="total-users">-</div>
+                </div>
+                <!-- Add more stats as needed or mock them for now -->
+            </div>
+
+            <div class="glass" style="padding: 20px; background: rgba(0,0,0,0.3);">
+                <h3 style="margin-bottom: 15px;">Quick Actions</h3>
+                <a href="upload.html" class="btn">Upload New Movie</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        if (api.getUserRole() !== 'ADMIN') window.location.href = '../login.html';
+
+        // This part needs specific endpoint for dashboard stats or we can fetch list counts
+        async function loadStats() {
+            try {
+                // Fetching lists to count - in efficient for real prod but fine for MVP
+                const [moviesReq, usersReq] = await Promise.all([
+                    api.fetch('/movies'),
+                    api.fetch('/admin/users')
+                ]);
+
+                if (moviesReq.ok) {
+                    const movies = await moviesReq.json();
+                    document.getElementById('total-movies').textContent = movies.length;
+                }
+
+                if (usersReq.ok) {
+                    const users = await usersReq.json();
+                    document.getElementById('total-users').textContent = users.length;
+                }
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        loadStats();
+    </script>
+</body>
+
+</html>

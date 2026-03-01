@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: streamflix-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: streamflix-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.9.0
+
+databases:
+  - name: streamflix-db
+    plan: free
+    databaseName: movie_db
+    user: movie_user
+
+# Note: Render Free Tier spins down after 15 mins of inactivity.

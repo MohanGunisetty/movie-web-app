@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Movie - StreamFlix Admin</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <a href="../index.html" class="nav-brand">StreamFlix Admin</a>
+            <div id="nav-links"></div>
+        </nav>
+
+        <div class="auth-container glass fade-in" style="max-width: 600px; margin-top: 40px;">
+            <h2 style="margin-bottom: 30px;">Upload New Movie</h2>
+
+            <form id="upload-form">
+                <div class="form-group">
+                    <label>Movie Title</label>
+                    <input type="text" id="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="description" rows="4"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category" required>
+                        <option value="">Select Category</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Video File (MP4, MKV)</label>
+                    <input type="file" id="video-file" accept=".mp4,.mkv,.avi" required>
+                    <small style="color: var(--text-muted);">Max size: 500MB</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Thumbnail (Optional)</label>
+                    <input type="file" id="thumbnail-file" accept="image/*">
+                </div>
+
+                <div class="form-group" id="progress-container" style="display: none;">
+                    <label>Uploading... Please wait.</label>
+                    <div style="width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden;">
+                        <div id="progress-bar"
+                            style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="msg" style="margin-bottom: 15px; display: none;"></div>
+
+                <button type="submit" class="btn" style="width: 100%;">Upload Movie</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        if (api.getUserRole() !== 'ADMIN') window.location.href = '../login.html';
+
+        // Load Categories
+        async function loadCategories() {
+            try {
+                const res = await api.fetch('/categories');
+                const categories = await res.json();
+                const select = document.getElementById('category');
+
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                });
+            } catch (e) {
+                console.error("Failed to load categories");
+            }
+        }
+
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const categoryId = document.getElementById('category').value;
+            const videoFile = document.getElementById('video-file').files[0];
+            const thumbnailFile = document.getElementById('thumbnail-file').files[0];
+            const msg = document.getElementById('msg');
+            const progressContainer = document.getElementById('progress-container');
+            const btn = e.target.querySelector('button');
+
+            if (!videoFile) return;
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('description', description);
+            formData.append('category_id', categoryId);
+            formData.append('video_file', videoFile);
+            if (thumbnailFile) {
+                formData.append('thumbnail_file', thumbnailFile);
+            }
+
+            // Lock UI
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+            progressContainer.style.display = 'block';
+            msg.style.display = 'none';
+
+            try {
+                // Using XHR for progress event if needed, but for simplicity using standard fetch (no progress) 
+                // or we can simulate/implement progress with XMLHttpRequest
+                // Let's us fetch for now, user sees "Uploading..."
+
+                const res = await api.fetch('/admin/movies', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.detail || 'Upload failed');
+                }
+
+                msg.textContent = 'Movie uploaded successfully!';
+                msg.style.color = 'var(--primary-color)';
+                msg.style.display = 'block';
+                e.target.reset();
+
+            } catch (err) {
+                msg.textContent = err.message;
+                msg.style.color = '#ff4444';
+                msg.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Upload Movie';
+                progressContainer.style.display = 'none';
+            }
+        });
+
+        loadCategories();
+    </script>
+</body>
+
+</html>

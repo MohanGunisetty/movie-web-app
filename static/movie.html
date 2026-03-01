@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Movie - StreamFlix</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <a href="index.html" class="nav-brand">StreamFlix</a>
+            <div id="nav-links" class="nav-links"></div>
+        </nav>
+
+        <div id="movie-content" class="fade-in">
+            <div class="glass" style="padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <video id="video-player" width="100%" controls controlsList="nodownload"
+                    style="border-radius: 8px; background: #000; aspect-ratio: 16/9;">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <div class="glass" style="padding: 30px;">
+                <h1 id="movie-title" style="margin-bottom: 15px;">Loading...</h1>
+                <div
+                    style="display: flex; gap: 20px; align-items: center; color: var(--text-muted); margin-bottom: 20px;">
+                    <span id="movie-category"
+                        style="background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 4px;"></span>
+                    <span id="movie-date"></span>
+                </div>
+                <p id="movie-desc" style="line-height: 1.8; color: #ddd;"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check Auth
+        if (!api.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+
+        async function loadMovie() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+
+            if (!id) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const res = await api.fetch(`/movies/${id}`);
+
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    throw new Error('Movie not found');
+                }
+
+                const movie = await res.json();
+
+                document.title = `${movie.title} - StreamFlix`;
+                document.getElementById('movie-title').textContent = movie.title;
+                document.getElementById('movie-desc').textContent = movie.description || 'No description available.';
+                document.getElementById('movie-category').textContent = movie.category ? movie.category.name : 'Uncategorized';
+                document.getElementById('movie-date').textContent = new Date(movie.created_at).toLocaleDateString();
+
+                // Setup Video Player with Token
+                const token = api.getToken();
+                const videoUrl = `/api/stream/${movie.id}?token=${token}`;
+                const player = document.getElementById('video-player');
+                player.src = videoUrl;
+
+            } catch (err) {
+                document.getElementById('movie-content').innerHTML = `<h2 style="text-align: center; color: var(--text-muted);">Error loading movie.</h2>`;
+            }
+        }
+
+        loadMovie();
+    </script>
+</body>
+
+</html>

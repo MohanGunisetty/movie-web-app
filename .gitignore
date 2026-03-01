@@ -1,0 +1,37 @@
+# Environment variables - never commit these!
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# SQLite database files (will be created on the server)
+*.db
+
+# Uploaded files (keep directory, not contents)
+uploads/*
+!uploads/.gitkeep
+
+# VS Code
+.vscode/
+
+# Test/debug files
+repro_*.py
+test_*.py
+run_sqlite_test.py
+
+# OS
+.DS_Store
+Thumbs.db
