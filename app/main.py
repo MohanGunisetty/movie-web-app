@@ -4,9 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .database import engine, Base
 
-# Create tables (normally done via migration tool like Alembic, but using auto-create for simplicity)
-Base.metadata.create_all(bind=engine)
-
+# Tables are created via init_db.py instead of auto-creation here to prevent uWSGI fork deadlocks
 app = FastAPI(title="Movie Streaming App")
 
 # CORS Setup
